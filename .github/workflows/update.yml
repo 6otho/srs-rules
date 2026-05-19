@@ -1,0 +1,62 @@
+name: Auto Update SRS Rules
+
+on:
+  schedule:
+    - cron: '0 20 * * *' # 每天北京时间早上4点自动拉取
+  workflow_dispatch: # 允许手动点击运行
+
+jobs:
+  update-srs:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      - name: Download Latest SRS Files
+        run: |
+          mkdir -p srs
+          cd srs
+          
+          declare -A srs_files=(
+              ["geosite-private"]="https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/sing/geo/geosite/private.srs"
+              ["geosite-cn"]="https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/sing/geo/geosite/cn.srs"
+              ["geosite-category-ads-all"]="https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/sing/geo/geosite/category-ads-all.srs"
+              ["geosite-ai"]="https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/sing/geo/geosite/category-ai-!cn.srs"
+              ["geosite-spotify"]="https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/sing/geo/geosite/spotify.srs"
+              ["geosite-youtube"]="https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/sing/geo-lite/geosite/youtube.srs"
+              ["geosite-google"]="https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/sing/geo-lite/geosite/google.srs"
+              ["geosite-telegram"]="https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/sing/geo-lite/geosite/telegram.srs"
+              ["geosite-tiktok"]="https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/sing/geo-lite/geosite/tiktok.srs"
+              ["geosite-line"]="https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/sing/geo/geosite/line.srs"
+              ["geosite-netflix"]="https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/sing/geo-lite/geosite/netflix.srs"
+              ["geosite-apple"]="https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/sing/geo-lite/geosite/apple.srs"
+              ["geosite-microsoft"]="https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/sing/geo-lite/geosite/microsoft.srs"
+              ["geoip-private"]="https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/sing/geo/geoip/private.srs"
+              ["geoip-google"]="https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/sing/geo-lite/geoip/google.srs"
+              ["geoip-telegram"]="https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/sing/geo-lite/geoip/telegram.srs"
+              ["geoip-netflix"]="https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/sing/geo-lite/geoip/netflix.srs"
+              ["geoip-twitter"]="https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/sing/geo-lite/geoip/twitter.srs"
+              ["geosite-facebook"]="https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/sing/geo/geosite/facebook.srs"
+              ["geosite-instagram"]="https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/sing/geo/geosite/instagram.srs"
+              ["geosite-threads"]="https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/sing/geo/geosite/threads.srs"
+              ["geoip-apple"]="https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/sing/geo-lite/geoip/apple.srs"
+              ["geoip-cn"]="https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/sing/geo-lite/geoip/cn.srs"
+              ["STUN"]="https://raw.githubusercontent.com/senshinya/singbox_ruleset/main/rule/STUN/STUN.srs"
+              ["BlockHttpDNS"]="https://raw.githubusercontent.com/senshinya/singbox_ruleset/main/rule/BlockHttpDNS/BlockHttpDNS.srs"
+          )
+
+          for tag in "${!srs_files[@]}"; do
+              curl -s -L -o "${tag}.srs" "${srs_files[$tag]}"
+          done
+
+      - name: Commit and Push changes
+        run: |
+          git config --local user.name "github-actions[bot]"
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git add srs/
+          if git diff --staged --quiet; then
+            echo "No changes"
+          else
+            git commit -m "Auto Update SRS Rules"
+            git push
+          fi
